@@ -1,12 +1,6 @@
 pipeline {
     agent any
-    
-    tools {
-        maven 'maven_3.9.9' // Make sure this matches your Jenkins Maven installation name
-        jdk 'jdk11'          // Make sure this matches your Jenkins JDK installation name
-    }
-    
-    
+   
     triggers {
         // Build periodically (daily at 2 AM)
         cron('H 2 * * *')

@@ -7,6 +7,11 @@ pipeline {
     }
     
     stages {
+		
+		tools {
+        maven 'maven_3.9.9'
+    	}
+		
         stage('Code Checkout') {
             steps {     
                 echo "Cloning the repository..."

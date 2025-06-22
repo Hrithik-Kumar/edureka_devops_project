@@ -1,16 +1,20 @@
 pipeline {
     agent any
-   
+   	
+   	tools {
+        maven 'maven_3.9.9'
+    	}
+    	
+    	
     triggers {
         // Build periodically (daily at 2 AM)
         cron('H 2 * * *')
     }
     
+    
+    
     stages {
-		
-		tools {
-        maven 'maven_3.9.9'
-    	}
+			
 		
         stage('Code Checkout') {
             steps {     

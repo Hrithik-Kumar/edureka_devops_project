@@ -28,7 +28,7 @@ pipeline {
 		stage('Main Execution'){
 			
 			steps {
-				withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
+				withEnv(["PATH+MAVEN=${tool 'maven_3.9.9'}/bin","PATH+EXTRA=${env.REQUIRED_PATH}"]) {
 			
 		
 	        stage('Code Checkout') {

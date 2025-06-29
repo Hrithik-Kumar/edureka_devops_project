@@ -37,7 +37,6 @@ pipeline {
         stage('Push Docker Image to Hub') {
             steps {
 				
-				withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
                 
                     script {
 						
@@ -47,7 +46,7 @@ pipeline {
 								
 								echo "Logging in to Docker Hub..."
 								// Use --password-stdin for security, it prevents the password from appearing in process lists
-                            	sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                            	sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                             	
                             	}
 							
@@ -63,7 +62,7 @@ pipeline {
 	                        	// Always logout after push
                         		sh "docker logout"
                         }
-                    }
+                    
                 }
             }
         

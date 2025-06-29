@@ -11,10 +11,8 @@ pipeline {
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
         DOCKERHUB_USERNAME     = 'kumaradv'
         IMAGE_NAME             = "${env.DOCKERHUB_USERNAME}/xyz-tech-webapp"
-        IMAGE_TAG              = "v${env.BUILD_NUMBER}"
 
-        // Pre-define the required PATH. This makes the pipeline self-documenting.
-        REQUIRED_PATH          = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+
        
     }
 

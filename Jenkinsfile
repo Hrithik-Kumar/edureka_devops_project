@@ -20,7 +20,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                // Apply the environment wrapper to this specific stage
+                
                     script {
 						def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
                         echo "Building Docker image: ${imageWithTag}"
@@ -63,7 +63,29 @@ pipeline {
                     
                 }
             }
-        
+            
+            
+        stage('Deploy as Container') {
+			
+			steps{
+				
+				script{
+					def containerName="xyz-webapp-container"
+					def imageToDeploy="${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
+					
+					echo "Deploying container: ${containerName} from image: ${imageToDeploy}"
+					
+					sh "docker stop ${containerName} || true"
+                    sh "docker rm ${containerName} || true"
+                    
+                    echo "Starting new container..."
+                    
+                    sh "docker run -d -p 8090:8080 --name ${containerName} --pull always ${imageToDeploy}"
+                    echo "Deployment successful."
+				}
+			}
+			
+		}
     }
 
     post {

@@ -14,7 +14,7 @@ pipeline {
         IMAGE_TAG              = "v${env.BUILD_NUMBER}"
 
         // Pre-define the required PATH. This makes the pipeline self-documenting.
-        REQUIRED_PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+       
     }
 
     stages {
@@ -30,37 +30,46 @@ pipeline {
       
         stage('Build & Test Application') {
             steps {
-                // Apply the environment wrapper to this specific stage
-                withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
+                
+         
                     echo "Compiling, testing, and packaging..."
                     sh 'mvn clean package'
-                }
+                
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 // Apply the environment wrapper to this specific stage
-                withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
                     script {
-                        echo "Building Docker image: ${env.IMAGE_NAME}"
-                        def customImage = docker.build(env.IMAGE_NAME, ".")
+						def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
+                        echo "Building Docker image: ${imageWithTag}"
+                        
+                        sh "docker build -t ${imageWithTag} ."
                         echo "Docker image built successfully."
                     }
-                }
+                
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Docker Image to Hub') {
             steps {
                 
                     script {
-                        docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS_ID) {
-                            echo "Pushing versioned image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-                            docker.image(env.IMAGE_NAME).push(env.IMAGE_TAG)
-
-                            echo "Pushing 'latest' tag..."
-                            docker.image(env.IMAGE_NAME).push('latest')
+						
+							def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
+						
+                        	withDockerRegistry([credentialsId: "${env.DOCKERHUB_CREDENTIALS_ID}", url:"" ]) {
+							
+							
+	                            echo "Pushing versioned image: ${imageWithTag}"
+	                        	sh "docker push ${imageWithTag}"
+	
+	                            echo "Tagging image as 'latest'..."
+	                        	sh "docker tag ${imageWithTag} ${env.IMAGE_NAME}:latest"
+	                        	
+	                        	echo "Pushing 'latest' tag..."
+	                        	sh "docker push ${env.IMAGE_NAME}:latest"
                         }
                     }
                 

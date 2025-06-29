@@ -43,8 +43,13 @@ pipeline {
 						
 							def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
 						
-                        	withDockerRegistry([credentialsId: "${env.DOCKERHUB_CREDENTIALS_ID}", url:"" ]) {
-							
+                        	withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+								
+								echo "Logging in to Docker Hub..."
+								// Use --password-stdin for security, it prevents the password from appearing in process lists
+                            	sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                            	
+                            	}
 							
 	                            echo "Pushing versioned image: ${imageWithTag}"
 	                        	sh "docker push ${imageWithTag}"
@@ -54,11 +59,14 @@ pipeline {
 	                        	
 	                        	echo "Pushing 'latest' tag..."
 	                        	sh "docker push ${env.IMAGE_NAME}:latest"
+	                        	
+	                        	// Always logout after push
+                        		sh "docker logout"
                         }
                     }
                 }
             }
-        }
+        
     }
 
     post {

@@ -1,4 +1,4 @@
-// Jenkinsfile - Final, Portable, and Self-Contained Version
+// Jenkinsfile - Syntactically Correct, Portable, and Self-Contained
 pipeline {
     agent any
 
@@ -14,52 +14,57 @@ pipeline {
         IMAGE_TAG              = "v${env.BUILD_NUMBER}"
 
         // Pre-define the required PATH. This makes the pipeline self-documenting.
-        // NOTE: Jenkins automatically prepends the paths for the configured JDK and Maven tools to this.
         REQUIRED_PATH = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
     }
 
-    triggers {
-        cron('H 2 * * *')
-    }
-
     stages {
-        // Wrap all execution stages in a withEnv block to ensure the PATH is correct
-        stage('Main Execution') {
+
+        stage('Code Checkout') {
             steps {
-                withEnv(["PATH+MAVEN=${tool 'maven_3.9.9'}/bin", "PATH+EXTRA=${env.REQUIRED_PATH}"]) {
-                    // --- All subsequent stages will now run inside this block ---
+				echo "Cloning the repository..."
+                checkout scm
+                echo "Code checked out from main branch."
+            }
+        }
+        
+      
+        stage('Build & Test Application') {
+            steps {
+                // Apply the environment wrapper to this specific stage
+                withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
+                    echo "Compiling, testing, and packaging..."
+                    sh 'mvn clean package'
+                }
+            }
+        }
 
-                
-                    stage('Code Checkout') {
-                        checkout scm
-                        echo "Code checked out from main branch."
+        stage('Build Docker Image') {
+            steps {
+                // Apply the environment wrapper to this specific stage
+                withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
+                    script {
+                        echo "Building Docker image: ${env.IMAGE_NAME}"
+                        def customImage = docker.build(env.IMAGE_NAME, ".")
+                        echo "Docker image built successfully."
                     }
+                }
+            }
+        }
 
-                    stage('Build & Test Application') {
-                        sh 'mvn clean package'
-                        echo "Application packaged successfully."
-                    }
+        stage('Push Docker Image') {
+            steps {
+                // Apply the environment wrapper to this specific stage
+                withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
+                    script {
+                        docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS_ID) {
+                            echo "Pushing versioned image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                            docker.image(env.IMAGE_NAME).push(env.IMAGE_TAG)
 
-                    stage('Build Docker Image') {
-                        script {
-                            echo "Building Docker image: ${env.IMAGE_NAME}"
-                            def customImage = docker.build(env.IMAGE_NAME, ".")
-                            echo "Docker image built successfully."
+                            echo "Pushing 'latest' tag..."
+                            docker.image(env.IMAGE_NAME).push('latest')
                         }
                     }
-
-                    stage('Push Docker Image') {
-                        script {
-                            docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS_ID) {
-                                echo "Pushing versioned image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
-                                docker.image(env.IMAGE_NAME).push(env.IMAGE_TAG)
-
-                                echo "Pushing 'latest' tag..."
-                                docker.image(env.IMAGE_NAME).push('latest')
-                            }
-                        }
-                    }
-                } // --- End of withEnv block ---
+                }
             }
         }
     }
@@ -71,6 +76,9 @@ pipeline {
         }
         failure {
             echo "Pipeline failed."
+        }
+        always {
+            echo "Pipeline execution finished."
         }
     }
 }

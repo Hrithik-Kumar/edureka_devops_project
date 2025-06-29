@@ -14,6 +14,7 @@ pipeline {
         IMAGE_TAG              = "v${env.BUILD_NUMBER}"
 
         // Pre-define the required PATH. This makes the pipeline self-documenting.
+        REQUIRED_PATH          = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
        
     }
 
@@ -35,6 +36,8 @@ pipeline {
 
         stage('Push Docker Image to Hub') {
             steps {
+				
+				withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
                 
                     script {
 						
@@ -53,7 +56,7 @@ pipeline {
 	                        	sh "docker push ${env.IMAGE_NAME}:latest"
                         }
                     }
-                
+                }
             }
         }
     }

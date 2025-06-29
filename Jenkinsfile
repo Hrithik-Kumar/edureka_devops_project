@@ -19,25 +19,6 @@ pipeline {
 
     stages {
 
-        stage('Code Checkout') {
-            steps {
-				echo "Cloning the repository..."
-                checkout scm
-                echo "Code checked out from main branch."
-            }
-        }
-        
-      
-        stage('Build & Test Application') {
-            steps {
-                
-         
-                    echo "Compiling, testing, and packaging..."
-                    sh 'mvn clean package'
-                
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 // Apply the environment wrapper to this specific stage

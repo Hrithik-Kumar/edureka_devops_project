@@ -53,8 +53,7 @@ pipeline {
 
         stage('Push Docker Image') {
             steps {
-                // Apply the environment wrapper to this specific stage
-                withEnv(["PATH+EXTRA=${env.REQUIRED_PATH}"]) {
+                
                     script {
                         docker.withRegistry('https://index.docker.io/v1/', env.DOCKERHUB_CREDENTIALS_ID) {
                             echo "Pushing versioned image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
@@ -64,7 +63,7 @@ pipeline {
                             docker.image(env.IMAGE_NAME).push('latest')
                         }
                     }
-                }
+                
             }
         }
     }

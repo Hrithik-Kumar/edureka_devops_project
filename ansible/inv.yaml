@@ -1,0 +1,7 @@
+all:
+  vars:
+    ansible_python_interpreter: /opt/miniconda3/bin/python
+  children:
+    ec2:
+      hosts:
+        34.224.250.235:

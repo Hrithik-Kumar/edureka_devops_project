@@ -1,0 +1,42 @@
+# deploy-app-docker.yaml - Deploy Java Web App as Docker Container
+---
+- name: Deploy Java Web Application as Docker Container
+  hosts: ec2
+  become: true
+  gather_facts: yes
+
+  vars:
+    docker_image: "kumaradv/xyz-tech-webapp:latest"
+    container_name: "xyz-webapp-container"
+    host_port: 8090
+    container_port: 8080
+
+  tasks:
+    - name: Ensure old container is stopped (if running)
+      ansible.builtin.shell: |
+        if docker ps -q -f name={{ container_name }}; then
+          docker stop {{ container_name }}
+        fi
+      ignore_errors: true
+
+    - name: Remove old container (if exists)
+      ansible.builtin.shell: |
+        if docker ps -a -q -f name={{ container_name }}; then
+          docker rm {{ container_name }}
+        fi
+      ignore_errors: true
+
+    - name: Pull latest Docker image
+      community.docker.docker_image:
+        name: "{{ docker_image }}"
+        source: pull
+
+    - name: Run new container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ docker_image }}"
+        state: started
+        restart_policy: always
+        published_ports:
+          - "{{ host_port }}:{{ container_port }}"
+        detach: true

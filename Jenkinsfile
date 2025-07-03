@@ -42,13 +42,25 @@ pipeline {
                     def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
                     echo "Building Docker image: ${imageWithTag}"
 
+
+                    sh "docker buildx create --use || true"
+                    sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} ."
+                    echo "Docker image built for linux/amd64 platform."
+                }
+            }
+        }
+
+
+        stage('Push Docker Image to Hub') {
+            steps {
+                script {
+                    def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
                     withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        echo "Logging in to Docker Hub for buildx..."
+                        echo "Logging in to Docker Hub..."
                         sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                     }
-                    sh "docker buildx create --use || true"
-                    sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} --push ."
-                    echo "Docker image built and pushed for linux/amd64 platform."
+                    echo "Pushing versioned image: ${imageWithTag}"
+                    sh "docker push ${imageWithTag}"
 
                     echo "Tagging image as 'latest'..."
                     sh "docker tag ${imageWithTag} ${env.IMAGE_NAME}:latest"
@@ -61,7 +73,6 @@ pipeline {
                 }
             }
         }
-
 
         stage('Deploy as Container') {
 

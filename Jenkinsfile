@@ -38,50 +38,29 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
+                script {
+                    def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
+                    echo "Building Docker image: ${imageWithTag}"
 
-                    script {
-						def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
-                        echo "Building Docker image: ${imageWithTag}"
-
-                        sh "docker buildx create --use || true"
-                        sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} --push ."
-                        echo "Docker image built and pushed for linux/amd64 platform."
+                    withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        echo "Logging in to Docker Hub for buildx..."
+                        sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                     }
+                    sh "docker buildx create --use || true"
+                    sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} --push ."
+                    echo "Docker image built and pushed for linux/amd64 platform."
 
-            }
-        }
+                    echo "Tagging image as 'latest'..."
+                    sh "docker tag ${imageWithTag} ${env.IMAGE_NAME}:latest"
 
-        stage('Push Docker Image to Hub') {
-            steps {
+                    echo "Pushing 'latest' tag..."
+                    sh "docker push ${env.IMAGE_NAME}:latest"
 
-
-                    script {
-
-							def imageWithTag = "${env.IMAGE_NAME}:v${env.BUILD_NUMBER}"
-
-                        	withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-
-								echo "Logging in to Docker Hub..."
-								// Use --password-stdin for security, it prevents the password from appearing in process lists
-                            	sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-
-                            	}
-
-                            echo "Pushing versioned image: ${imageWithTag}"
-                            // Already pushed with buildx above
-
-                            echo "Tagging image as 'latest'..."
-                            sh "docker tag ${imageWithTag} ${env.IMAGE_NAME}:latest"
-
-                            echo "Pushing 'latest' tag..."
-                            sh "docker push ${env.IMAGE_NAME}:latest"
-
-                            // Always logout after push
-                            sh "docker logout"
-                        }
-
+                    // Always logout after push
+                    sh "docker logout"
                 }
             }
+        }
 
 
         stage('Deploy as Container') {

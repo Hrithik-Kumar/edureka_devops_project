@@ -46,6 +46,9 @@ pipeline {
                     sh "docker buildx create --use || true"
                     sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} --load ."
                     echo "Docker image built for linux/amd64 platform and loaded into local Docker daemon."
+
+                    // Clean up old buildkit containers
+                    sh "docker ps -a --filter 'ancestor=moby/buildkit:buildx-stable-1' --format '{{.ID}}' | xargs -r docker rm -f || true"
                 }
             }
         }

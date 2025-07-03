@@ -44,8 +44,8 @@ pipeline {
 
 
                     sh "docker buildx create --use || true"
-                    sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} ."
-                    echo "Docker image built for linux/amd64 platform."
+                    sh "docker buildx build --platform linux/amd64 -t ${imageWithTag} --load ."
+                    echo "Docker image built for linux/amd64 platform and loaded into local Docker daemon."
                 }
             }
         }

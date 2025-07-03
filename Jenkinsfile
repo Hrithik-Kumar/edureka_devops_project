@@ -68,7 +68,7 @@ pipeline {
                             	}
 
                             echo "Pushing versioned image: ${imageWithTag}"
-                            # Already pushed with buildx above
+                            // Already pushed with buildx above
 
                             echo "Tagging image as 'latest'..."
                             sh "docker tag ${imageWithTag} ${env.IMAGE_NAME}:latest"

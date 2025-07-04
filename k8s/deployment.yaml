@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xyz-tech-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: xyz-tech
+  template:
+    metadata:
+      labels:
+        app: xyz-tech
+    spec:
+      containers:
+        - name: xyz-tech-app
+          image: kumaradv/xyz-tech-webapp:latest
+          ports:
+            - containerPort: 8080

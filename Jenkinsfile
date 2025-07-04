@@ -77,6 +77,29 @@ pipeline {
             }
         }
 
+        stage('Deploy to EKS') {
+            steps {
+                script {
+                    echo "Deploying to AWS EKS cluster using kubectl..."
+
+                    // Update kubeconfig (optional, if not already set)
+                    // sh 'aws eks --region us-east-1 update-kubeconfig --name devops-eks-cluster'
+
+                    // Apply Kubernetes manifests
+                    sh 'kubectl apply -f k8s/deployment.yaml'
+                    sh 'kubectl apply -f k8s/service.yaml'
+
+                    // Wait for pods to be ready
+                    sh 'kubectl rollout status deployment/xyz-tech-deployment --timeout=120s'
+
+                    // Show service info
+                    sh 'kubectl get svc xyz-tech-service'
+
+                    echo "EKS deployment complete."
+                }
+            }
+        }
+
         stage('Deploy as Container') {
 
 			steps{
